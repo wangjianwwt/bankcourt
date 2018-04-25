@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.born.bc.body.userinfo.dao.RoleMapper">
+	<resultMap id="BaseResultMap" type="com.born.bc.body.userinfo.entity.Role">
+		<result column="ID" property="id" jdbcType="VARCHAR" />
+		<result column="ROLE_NAME" property="roleName" jdbcType="VARCHAR" />
+		<result column="ROLE_CODE" property="roleCode" jdbcType="VARCHAR" />
+		<result column="ENABLE_STATUS" property="enableStatus"
+			jdbcType="INTEGER" />
+		<result column="COMMENTS" property="comments" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="Base_Column_List_Role">
+		ID, ROLE_NAME, ROLE_CODE, ENABLE_STATUS, COMMENTS, FORMMAKER_ID,
+		FORMMAKER_NAME,
+		CREATE_TIME
+	</sql>
+
+	<select id="selectById" parameterType="java.lang.String" resultMap="BaseResultMap">
+		select 
+			<include refid="Base_Column_List_Role" />
+		from t_role
+		where DEL_STATUS = 0
+		and id = #{id, jdbcType=VARCHAR}
+	</select>
+
+	<select id="selectRoleList" resultMap="BaseResultMap">
+		SELECT
+		<include refid="Base_Column_List_Role" />
+		FROM t_role
+		<where>
+			DEL_STATUS = 0
+			and IS_ADMIN = 0
+			<if test="entity.roleName != null and entity.roleName != ''">
+				and (
+				instr(ROLE_NAME, #{entity.roleName, jdbcType=VARCHAR}) &gt; 0
+				or
+				instr(ROLE_CODE, #{entity.roleName, jdbcType=VARCHAR}) &gt; 0
+				)
+			</if>
+			<if test="entity.enableStatus != null and entity.enableStatus != ''">
+				and ENABLE_STATUS = #{entity.enableStatus, jdbcType=INTEGER}
+			</if>
+		</where>
+	</select>
+
+	<select id="getRoleByLoginName" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT
+		c.ROLE_CODE roleCode
+		FROM
+		t_user a
+		INNER JOIN t_user_role b ON a.ID = b.USER_ID
+		LEFT JOIN t_role c ON b.ROLE_ID = c.ID
+		WHERE
+		a.DEL_STATUS = 0
+		AND c.DEL_STATUS = 0
+		AND c.ENABLE_STATUS = 1
+		AND a.ENABLE_STATUS = 1
+		AND a.LOGIN_NAME = #{loginName, jdbcType=VARCHAR}
+	</select>
+
+	<insert id="insert" parameterType="com.born.bc.body.userinfo.entity.Role">
+		insert into t_role (ID, ROLE_NAME, ROLE_CODE,
+		ENABLE_STATUS, COMMENTS, FORMMAKER_ID,
+		FORMMAKER_NAME, CREATE_TIME, LAST_MODIFIED_TIME,
+		DEL_STATUS)
+		values (#{id,jdbcType=VARCHAR}, #{roleName,jdbcType=VARCHAR},
+		#{roleCode,jdbcType=VARCHAR},
+		#{enableStatus,jdbcType=INTEGER}, #{comments,jdbcType=VARCHAR}, #{formmakerId,jdbcType=VARCHAR},
+		#{formmakerName,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
+		#{lastModifiedTime,jdbcType=TIMESTAMP},
+		#{delStatus,jdbcType=INTEGER})
+	</insert>
+	<insert id="insertSelective" parameterType="com.born.bc.body.userinfo.entity.Role">
+		insert into t_role
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				ID,
+			</if>
+			<if test="roleName != null">
+				ROLE_NAME,
+			</if>
+			<if test="roleCode != null">
+				ROLE_CODE,
+			</if>
+			<if test="enableStatus != null">
+				ENABLE_STATUS,
+			</if>
+			<if test="comments != null">
+				COMMENTS,
+			</if>
+			<if test="formmakerId != null">
+				FORMMAKER_ID,
+			</if>
+			<if test="formmakerName != null">
+				FORMMAKER_NAME,
+			</if>
+			<if test="createTime != null">
+				CREATE_TIME,
+			</if>
+			<if test="lastModifiedTime != null">
+				LAST_MODIFIED_TIME,
+			</if>
+			<if test="delStatus != null">
+				DEL_STATUS,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=VARCHAR},
+			</if>
+			<if test="roleName != null">
+				#{roleName,jdbcType=VARCHAR},
+			</if>
+			<if test="roleCode != null">
+				#{roleCode,jdbcType=VARCHAR},
+			</if>
+			<if test="enableStatus != null">
+				#{enableStatus,jdbcType=INTEGER},
+			</if>
+			<if test="comments != null">
+				#{comments,jdbcType=VARCHAR},
+			</if>
+			<if test="formmakerId != null">
+				#{formmakerId,jdbcType=VARCHAR},
+			</if>
+			<if test="formmakerName != null">
+				#{formmakerName,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="lastModifiedTime != null">
+				#{lastModifiedTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="delStatus != null">
+				#{delStatus,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+
+	<update id="updateSelective" parameterType="com.born.bc.body.userinfo.entity.Role">
+		UPDATE t_role
+		SET
+		<if test="roleName != null and roleName != ''">
+			ROLE_NAME = #{roleName,jdbcType=VARCHAR},
+		</if>
+		<if test="comments != null and comments != ''">
+			COMMENTS = #{comments,jdbcType=VARCHAR},
+		</if>
+		<if test="enableStatus != null">
+			ENABLE_STATUS = #{enableStatus,jdbcType=INTEGER},
+		</if>
+		LAST_MODIFIED_TIME = current_timestamp
+		where ID = #{id,jdbcType=VARCHAR}
+	</update>
+
+	<update id="updateDelStatus" parameterType="java.lang.String">
+		update t_role set DEL_STATUS = 1, LAST_MODIFIED_TIME =
+		current_timestamp where DEL_STATUS = 0 and ID = #{id,
+		jdbcType=VARCHAR}
+	</update>
+
+	<insert id="batchInsertRoleAndPermission" parameterType="java.util.List">
+		INSERT INTO t_permission_role
+		(ID, PERMISSIOIN_ID, ROLE_ID, FORMMAKER_ID, FORMMAKER_NAME)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(
+			#{item.id, jdbcType=VARCHAR},
+			#{item.permissionId, jdbcType=VARCHAR},
+			#{item.roleId, jdbcType=VARCHAR},
+			#{item.formmakerId, jdbcType=VARCHAR},
+			#{item.formmakerName, jdbcType=VARCHAR}
+			)
+		</foreach>
+	</insert>
+
+	<update id="updateRoleAndPermissionDelStatus" parameterType="java.lang.String">
+		update t_permission_role set DEL_STATUS = 1, LAST_MODIFIED_TIME =
+		current_timestamp where DEL_STATUS = 0 and ROLE_ID = #{roleId,
+		jdbcType=VARCHAR}
+	</update>
+
+	<select id="checkRoleIsLinked" parameterType="java.lang.String"
+		resultType="java.lang.Integer">
+		select count(1) from t_user_role where DEL_STATUS = 0 and ROLE_ID =
+		#{roleId, jdbcType=VARCHAR}
+	</select>
+
+	<select id="selectLinkedRoleByUserId" parameterType="java.lang.String"
+		resultMap="BaseResultMap">
+		SELECT
+		b.ID,
+		b.ROLE_NAME,
+		b.ROLE_CODE,
+		b.COMMENTS,
+		b.CREATE_TIME,
+		b.ENABLE_STATUS,
+		b.FORMMAKER_ID,
+		b.FORMMAKER_NAME
+		FROM
+		t_user_role a
+		INNER JOIN t_role b ON a.ROLE_ID = b.ID
+		WHERE
+		b.DEL_STATUS = 0
+		AND a.USER_ID = #{userId, jdbcType=VARCHAR}
+	</select>
+	
+	<select id="selectPermissionListByRole" parameterType="java.util.List" resultType="java.util.Map">
+		SELECT
+			a.ROLE_ID "roleId",
+			b.ID "id",
+			b.PERMISSION_CODE "permissionCode",
+			b.PERMISSION_NAME "permissionName"
+		FROM
+			t_permission_role a
+		INNER JOIN t_permission b ON a.PERMISSIOIN_ID = b.ID
+		WHERE
+			a.DEL_STATUS = 0
+		AND b.DEL_STATUS = 0
+		AND a.ROLE_ID IN (
+			<foreach collection="list" item="item" index="index" separator=",">
+				#{item.id, jdbcType=VARCHAR}
+			</foreach>
+		)
+	</select>
+
+</mapper>

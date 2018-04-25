@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.born.bc.body.userinfo.dao.UserMapper">
+    <resultMap id="BaseResultMap_User" type="com.born.bc.body.userinfo.entity.User">
+        <id column="ID" property="id" jdbcType="VARCHAR"/>
+        <result column="LOGIN_NAME" property="loginName" jdbcType="VARCHAR"/>
+        <result column="PASSWORD" property="password" jdbcType="VARCHAR"/>
+        <result column="REAL_NAME" property="realName" jdbcType="VARCHAR"/>
+        <result column="PHONE" property="phone" jdbcType="VARCHAR"/>
+        <result column="EMAIL" property="email" jdbcType="VARCHAR"/>
+        <result column="ENABLE_STATUS" property="enableStatus" jdbcType="INTEGER"/>
+        <result column="IS_ADMIN" property="isAdmin" jdbcType="INTEGER"/>
+        <result column="LOGIN_NUM" property="loginNum" jdbcType="INTEGER"/>
+        <result column="LOGIN_TIME" property="loginTime" jdbcType="TIMESTAMP"/>
+        <result column="LOGIN_IP" property="loginIp" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List_user">
+        ID, LOGIN_NAME, PASSWORD, REAL_NAME, PHONE, EMAIL, ENABLE_STATUS, IS_ADMIN, LOGIN_NUM, LOGIN_TIME, LOGIN_IP, FORMMAKER_ID, FORMMAKER_NAME,
+        CREATE_TIME
+    </sql>
+
+    <select id="getUserByLoginName" parameterType="java.lang.String" resultMap="BaseResultMap_User">
+        select
+        <include refid="Base_Column_List_user"/>
+        from t_user 
+        where 
+        DEL_STATUS = 0
+        and (LOGIN_NAME = #{loginName,jdbcType=VARCHAR} 
+        or PHONE = #{loginName,jdbcType=VARCHAR})
+    </select>
+
+    <select id="validateUserByLoginName" resultMap="BaseResultMap_User">
+        select
+        <include refid="Base_Column_List_user"/>
+        from t_user
+        <where>
+            DEL_STATUS = 0
+            <if test="id != null and id != ''">
+                and ID &lt;&gt; #{id, jdbcType=VARCHAR}
+            </if>
+            and ( LOGIN_NAME = #{loginName,jdbcType=VARCHAR}
+            or PHONE = #{phone,jdbcType=VARCHAR} )
+        </where>
+    </select>
+
+    <update id="updateUserDelStatus" parameterType="java.lang.String">
+        update t_user set DEL_STATUS = 1 , LAST_MODIFIED_TIME = current_timestamp where ID = #{id,jdbcType=VARCHAR}
+    </update>
+
+    <select id="findUserList" parameterType="com.born.bc.body.userinfo.entity.User" resultMap="BaseResultMap_User">
+        SELECT
+        <include refid="Base_Column_List_user"/>
+        FROM t_user
+        <where>
+            DEL_STATUS = 0
+            and IS_ADMIN = 0
+            <if test="entity.loginName != null and entity.loginName != ''">
+                and (
+                	instr(LOGIN_NAME, #{entity.loginName,jdbcType=VARCHAR}) &gt; 0
+                or
+                	instr(REAL_NAME, #{entity.loginName,jdbcType=VARCHAR}) &gt; 0
+                )
+            </if>
+            <if test="entity.enableStatus != null">
+                and ENABLE_STATUS = #{entity.enableStatus,jdbcType=INTEGER}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertSelective" parameterType="com.born.bc.body.userinfo.entity.User">
+        insert into t_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                ID,
+            </if>
+            <if test="loginName != null">
+                LOGIN_NAME,
+            </if>
+            <if test="password != null">
+                PASSWORD,
+            </if>
+            <if test="realName != null">
+                REAL_NAME,
+            </if>
+            <if test="phone != null">
+                PHONE,
+            </if>
+            <if test="email != null">
+                EMAIL,
+            </if>
+            <if test="enableStatus != null">
+                ENABLE_STATUS,
+            </if>
+            <if test="formmakerId != null">
+                FORMMAKER_ID,
+            </if>
+            <if test="formmakerName != null">
+                FORMMAKER_NAME,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="loginName != null">
+                #{loginName,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="realName != null">
+                #{realName,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null">
+                #{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null">
+                #{email,jdbcType=VARCHAR},
+            </if>
+            <if test="enableStatus != null">
+                #{enableStatus,jdbcType=INTEGER},
+            </if>
+            <if test="formmakerId != null">
+                #{formmakerId,jdbcType=VARCHAR},
+            </if>
+            <if test="formmakerName != null">
+                #{formmakerName,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.born.bc.body.userinfo.entity.User">
+        update t_user
+        <set>
+            <if test="loginName != null and loginName != ''">
+                LOGIN_NAME = #{loginName,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null and password != ''">
+                PASSWORD = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="realName != null and realName != ''">
+                REAL_NAME = #{realName,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null and phone != ''">
+                PHONE = #{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null and email != ''">
+                EMAIL = #{email,jdbcType=VARCHAR},
+            </if>
+            <if test="enableStatus != null">
+                ENABLE_STATUS = #{enableStatus,jdbcType=INTEGER},
+            </if>
+            <if test="formmakerId != null and formmakerId != ''">
+                FORMMAKER_ID = #{formmakerId,jdbcType=VARCHAR},
+            </if>
+            <if test="formmakerName != null and formmakerName != ''">
+                FORMMAKER_NAME = #{formmakerName,jdbcType=VARCHAR},
+            </if>
+            LAST_MODIFIED_TIME = current_timestamp
+        </set>
+        where ID = #{id,jdbcType=VARCHAR}
+    </update>
+
+    <insert id="batchInsertUserRoleRelation" parameterType="java.util.List">
+    	INSERT INTO t_user_role (
+            ID, USER_ID, ROLE_ID, FORMMAKER_ID, FORMMAKER_NAME
+        ) VALUES 
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.id, jdbcType=VARCHAR},
+            #{item.userId, jdbcType=VARCHAR},
+            #{item.roleId, jdbcType=VARCHAR},
+            #{item.formmakerId, jdbcType=VARCHAR},
+            #{item.formmakerName, jdbcType=VARCHAR}
+            )
+        </foreach>
+    </insert>
+
+
+    <update id="updateUserAndRoleDelStatus" parameterType="java.lang.String">
+        update t_user_role SET DEL_STATUS = 1, LAST_MODIFIED_TIME = current_timestamp where DEL_STATUS = 0 and USER_ID = #{userId, jdbcType=VARCHAR}
+    </update>
+
+    <select id="selectById" parameterType="java.lang.String" resultMap="BaseResultMap_User">
+        select
+        <include refid="Base_Column_List_user" />
+        FROM t_user
+        where DEL_STATUS = 0 and ID = #{id, jdbcType=VARCHAR}
+    </select>
+
+	<update id="changePassword" parameterType="com.born.bc.body.userinfo.entity.User">
+		update t_user
+        <set>
+            PASSWORD = #{password,jdbcType=VARCHAR},
+            LAST_MODIFIED_TIME = current_timestamp
+        </set>
+        where ID = #{id,jdbcType=VARCHAR}
+        and LOGIN_NAME = #{loginName,jdbcType=VARCHAR}
+        and DEL_STATUS = 0
+	</update>
+	<select id="findRoleListByUserIds" parameterType="java.util.List" resultType="java.util.Map">
+		SELECT
+			distinct
+			a.USER_ID userId,
+			b.ID id, 
+			b.ROLE_NAME roleName, 
+			b.ROLE_CODE roleCode
+		FROM
+			t_user_role a
+		INNER JOIN t_role b ON a.ROLE_ID = b.ID
+		WHERE
+			a.DEL_STATUS = 0
+		AND b.DEL_STATUS = 0
+		AND a.USER_ID in (
+			<foreach collection="list" item="item" index="index" separator=",">
+				#{item.id, jdbcType=VARCHAR}
+			</foreach>
+		)
+	</select>
+	
+	<select id="validateOldMd5Pwd" resultType="java.lang.Integer">
+		select count(1) 
+		from t_user 
+		where DEL_STATUS = 0 
+		and ID = #{id, jdbcType=VARCHAR} 
+		and PASSWORD = #{password, jdbcType=VARCHAR}
+	</select>
+	
+	<update id="saveLoginInfo" parameterType="com.born.bc.body.userinfo.entity.User">
+		update t_user set LOGIN_NUM = LOGIN_NUM + 1, LOGIN_TIME = now(), LOGIN_IP = #{loginIp, jdbcType=VARCHAR}
+		where ID = #{id, jdbcType=VARCHAR}
+	</update>
+
+</mapper>

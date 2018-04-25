@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.born.bc.body.userinfo.dao.PermissionMapper">
+    <resultMap id="BaseResultMap" type="com.born.bc.body.userinfo.entity.Permission">
+        <result column="ID" property="id" jdbcType="VARCHAR"/>
+        <result column="PERMISSION_NAME" property="permissionName" jdbcType="VARCHAR"/>
+        <result column="PERMISSION_CODE" property="permissionCode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_STATUS" property="enableStatus" jdbcType="INTEGER"/>
+        <result column="COMMENTS" property="comments" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List_Permission">
+	    ID, PERMISSION_NAME, PERMISSION_CODE, ENABLE_STATUS, COMMENTS, FORMMAKER_ID, FORMMAKER_NAME,
+	    CREATE_TIME
+  	</sql>
+	
+	<select id="selectPermissionByRoleId" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT
+			PERMISSIOIN_ID
+		FROM
+			t_permission_role
+		WHERE
+			ROLE_ID = #{roleId, jdbcType=VARCHAR}
+		AND DEL_STATUS = 0
+	</select>
+	
+    <select id="selectPermissionList" parameterType="com.born.bc.body.userinfo.entity.Permission" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List_Permission"/>
+        FROM t_permission
+        <where>
+            DEL_STATUS = 0
+            and IS_ADMIN = 0
+            <if test="permissionName != null and permissionName != ''">
+                and (
+                instr(PERMISSION_NAME, #{permissionName,jdbcType=VARCHAR}) &gt; 0
+                or
+                instr(PERMISSION_CODE, #{permissionName,jdbcType=VARCHAR}) &gt; 0
+                )
+            </if>
+            <if test="enableStatus != null">
+            	and ENABLE_STATUS = #{enableStatus, jdbcType=INTEGER}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getPermissionByRoleCodes" parameterType="java.util.List" resultType="java.lang.String">
+        SELECT
+        c.PERMISSION_CODE permissionCode
+        FROM
+        t_role a
+        INNER JOIN t_permission_role b ON a.ID = b.ROLE_ID
+        LEFT JOIN t_permission c ON b.PERMISSIOIN_ID = c.ID
+        WHERE
+        a.DEL_STATUS = 0
+        AND c.DEL_STATUS = 0
+        AND a.ENABLE_STATUS = 1
+        AND c.ENABLE_STATUS = 1
+        AND a.ROLE_CODE IN
+        <foreach collection="roleIds" item="item" index="index" open="(" close=")" separator=",">
+            #{item, jdbcType=VARCHAR}
+        </foreach>
+    </select>
+
+    <insert id="insert" parameterType="com.born.bc.body.userinfo.entity.Permission">
+    insert into t_permission (ID, PERMISSION_NAME, PERMISSION_CODE, 
+      ENABLE_STATUS, COMMENTS, FORMMAKER_ID, 
+      FORMMAKER_NAME, CREATE_TIME, LAST_MODIFIED_TIME, 
+      DEL_STATUS)
+    values (#{id,jdbcType=VARCHAR}, #{permissionName,jdbcType=VARCHAR}, #{permissionCode,jdbcType=VARCHAR}, 
+      #{enableStatus,jdbcType=INTEGER}, #{comments,jdbcType=VARCHAR}, #{formmakerId,jdbcType=VARCHAR}, 
+      #{formmakerName,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{lastModifiedTime,jdbcType=TIMESTAMP}, 
+      #{delStatus,jdbcType=INTEGER})
+  </insert>
+    <insert id="insertSelective" parameterType="com.born.bc.body.userinfo.entity.Permission">
+        insert into t_permission
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                ID,
+            </if>
+            <if test="permissionName != null">
+                PERMISSION_NAME,
+            </if>
+            <if test="permissionCode != null">
+                PERMISSION_CODE,
+            </if>
+            <if test="enableStatus != null">
+                ENABLE_STATUS,
+            </if>
+            <if test="comments != null">
+                COMMENTS,
+            </if>
+            <if test="formmakerId != null">
+                FORMMAKER_ID,
+            </if>
+            <if test="formmakerName != null">
+                FORMMAKER_NAME,
+            </if>
+            <if test="createTime != null">
+                CREATE_TIME,
+            </if>
+            <if test="lastModifiedTime != null">
+                LAST_MODIFIED_TIME,
+            </if>
+            <if test="delStatus != null">
+                DEL_STATUS,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="permissionName != null">
+                #{permissionName,jdbcType=VARCHAR},
+            </if>
+            <if test="permissionCode != null">
+                #{permissionCode,jdbcType=VARCHAR},
+            </if>
+            <if test="enableStatus != null">
+                #{enableStatus,jdbcType=INTEGER},
+            </if>
+            <if test="comments != null">
+                #{comments,jdbcType=VARCHAR},
+            </if>
+            <if test="formmakerId != null">
+                #{formmakerId,jdbcType=VARCHAR},
+            </if>
+            <if test="formmakerName != null">
+                #{formmakerName,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="lastModifiedTime != null">
+                #{lastModifiedTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="delStatus != null">
+                #{delStatus,jdbcType=INTEGER},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateSelective" parameterType="com.born.bc.body.userinfo.entity.Permission">
+      UPDATE 
+      	t_permission 
+      SET 
+      	<if test="permissionName != null and permissionName != ''">
+      		PERMISSION_NAME = #{permissionName,jdbcType=VARCHAR}, 
+      	</if>
+      	<if test="comments != null and comments != ''">
+      		COMMENTS = #{comments,jdbcType=VARCHAR}, 
+      	</if>
+      	<if test="enableStatus != null">
+      		ENABLE_STATUS = #{enableStatus,jdbcType=INTEGER},
+      	</if>
+      	LAST_MODIFIED_TIME = current_timestamp 
+      	where ID = #{id,jdbcType=VARCHAR}
+    </update>
+
+    <select id="checkPermissionIsLinked" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(1) from t_permission_role where DEL_STATUS = 0 and PERMISSION_ID = #{permissionId, jdbcType=VARCHAR}
+    </select>
+
+    <update id="updateDelStatus" parameterType="java.lang.String">
+        update t_permission SET DEL_STATUS = 1, LAST_MODIFIED_TIME = current_timestamp where DEL_STATUS = 0 and ID = #{id,jdbcType=VARCHAR}
+    </update>
+    
+</mapper>
